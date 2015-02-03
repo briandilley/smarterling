@@ -4,7 +4,7 @@ setup(
 
     # general meta
     name='smarterling',
-    version='1.7',
+    version='0.1',
     author='Brian C. Dilley - Flipagram',
     author_email='brian@flipagram.com',
     description='Python based command line tool for performing automated tasks with Smartling (http://www.smartling.com).',
