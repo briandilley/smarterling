@@ -81,7 +81,8 @@ Each file falls beneath the `files` top level configuration and has the followin
 - `file-type` (required) the file type, this must be one of the values supported by [Smartling](https://docs.smartling.com/display/docs/Files+API#FilesAPI-/file/upload(POST))
 - `save-cmd` (optional) the command to execute when saving the file, by default the file is just saved to the location defined by `save-pattern`
   - token: `{input_file}` the input file
-  - token: `{output_file}` the output file
+  - token: `{locale}` can be used to place the locale into the path, it is in the format: `en-US`
+  - token: `{locale_underscore}` can be used to place the locale into the path, it is in the format: `en_US`
 - `approve-content` (optional, default: `true`) whether or not to automatically approve uploaded content
 - `callback-url` (optional) The calllback url for when the file is 100% translated
 - `retrieval-type` (optional, default: `published`) the type of files to download

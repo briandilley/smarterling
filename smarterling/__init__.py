@@ -1,5 +1,6 @@
 
 import os
+import shutil
 from smartlingApiSdk.UploadData import UploadData
 from smartlingApiSdk.SmartlingDirective import SmartlingDirective
 from smartlingApiSdk.SmartlingFileApi import \
@@ -40,7 +41,6 @@ def download_files(fapi, file_name, conf):
     retrieval_type              = conf.get('retrieval-type', 'published')
     include_original_strings    = 'true' if conf.get('include-original-strings', False) else 'false'
     save_pattern                = conf.get('save-pattern')
-    save_command                = conf.get('save-cmd', None)
 
     if not save_pattern:
         raise SmarterlingError("File %s doesn't have a save-pattern" % file_name)
@@ -73,27 +73,39 @@ def download_files(fapi, file_name, conf):
             try :
                 filter_cmd = filter_cmd.replace("{input_file}", work_file)
                 filter_cmd = filter_cmd.replace("{output_file}", tmp_file)
+                filter_cmd = filter_cmd.replace("{locale}", item.locale)
+                filter_cmd = filter_cmd.replace("{locale_underscore}", item.locale.replace("-", "_"))
                 print(" running filter: %s " % filter_cmd)
                 if os.system(filter_cmd) != 0:
                     raise SmarterlingError("Non 0 exit code from filter: %s" % filter_cmd)
-                os.rename(tmp_file, work_file)
+                shutil.move(tmp_file, work_file)
             finally:
                 os.close(fd)
 
-        save_file = conf.get('save-pattern')
-        save_file = save_file.replace("{locale}", item.locale)
-        save_file = save_file.replace("{locale_underscore}", item.locale.replace("-", "_"))
-        save_dir = os.path.dirname(save_file)
-        if not os.path.exists(save_dir):
-            os.makedirs(save_dir)
-        elif not os.path.isdir(save_dir):
-            raise SmarterlingError("Expected %s to be a directory, but it's an existing file" % save_dir)
-
-        if save_command:
+        if conf.has_key('save-cmd'):
+            save_command = conf.get('save-cmd')
+            save_command = save_command.replace("{input_file}", work_file)
+            save_command = save_command.replace("{locale}", item.locale)
+            save_command = save_command.replace("{locale_underscore}", item.locale.replace("-", "_"))
+            print(" running save command: %s " % save_command)
             if os.system(save_command) != 0:
                 raise SmarterlingError("Non 0 exit code from save command: %s" % save_command)
+
+        elif conf.has_key('save-pattern'):
+            save_file = conf.get('save-pattern')
+            save_file = save_file.replace("{locale}", item.locale)
+            save_file = save_file.replace("{locale_underscore}", item.locale.replace("-", "_"))
+            save_dir = os.path.dirname(save_file)
+            if not os.path.exists(save_dir):
+                os.makedirs(save_dir)
+            elif not os.path.isdir(save_dir):
+                raise SmarterlingError("Expected %s to be a directory, but it's an existing file" % save_dir)
+            print(" saving output to: %s " % save_file)
+            shutil.move(work_file, save_file)
+
         else:
-            os.rename(work_file, save_file)
+            raise SmarterlingError("no save-cmd or save-pattern for: %s" % file_name)
+
 
 def upload_file(fapi, file_name, conf):
     """ Uploads a file to smartling
