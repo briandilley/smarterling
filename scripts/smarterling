@@ -32,3 +32,4 @@ if __name__ == "__main__":
         main()
     except smarterling.SmarterlingError as e:
         print("\n\nFATAL ERROR: %s" % e.message)
+        exit(187)
