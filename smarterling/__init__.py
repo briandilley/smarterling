@@ -52,6 +52,11 @@ def download_files(fapi, file_name, conf):
             print("%s translation not found for %s" % (item.locale, file_name))
             continue
 
+        # TODO: use conf['save-pattern'] to determine save location
+        #       - {locale} (zh-CN)
+        #       - {locale_underscore} (zh_CN)
+        # TODO: save contents to save location
+
 
 def get_locales(fapie, file_name, conf):
     """ Returns the locales for a file
@@ -67,7 +72,7 @@ def upload_file(fapi, file_name, conf):
         conf.get('file-type', ''))
     data.setUri(file_uri(file_name, conf))
     if conf.has_key('approve-content'):
-        data.setApproveContent("true" if conf.get('approve-content', False) else "false")
+        data.setApproveContent("true" if conf.get('approve-content', True) else "false")
     if conf.has_key('callback-url'):
         data.setCallbackUrl(conf.get('callback-url'))
     for name, value in conf.get('directives', {}).items():
