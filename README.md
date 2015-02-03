@@ -87,5 +87,3 @@ Each file falls beneath the `files` top level configuration and has the followin
   - token: `{input_file}` the input file
   - token: `{output_file}` the output file
 
-
-
