@@ -2,9 +2,13 @@
 Utility for automating tasks with Smartling
 
 ## installation and use
-Install smarterling using pip:
+Smarterling is in [PyPi](https://pypi.python.org/pypi/smarterling) and can be installed using pip:
 ```shell
 > pip install smarterling
+```
+or easy_install:
+```shell
+> easy_install smarterling
 ```
 
 Then run the smarterling command:
