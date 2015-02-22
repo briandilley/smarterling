@@ -49,7 +49,13 @@ def download_files(fapi, file_name, conf):
     (response, code) = fapi.last_modified(file_uri(file_name, conf))
 
     for item in response.data.items:
-        item = AttributeDict(item)
+        item                = AttributeDict(item)
+        locale              = item.locale
+        locale_underscore   = locale.replace("-", "_")
+        locale_android_res  = locale.replace("-", "-r")
+        locale_parts        = locale.split("-")
+        language            = locale_parts[0]
+        region              = locale_parts[1] if len(locale_parts)>1 else ""
 
         (file_response, code) = fapi.get(file_uri(file_name, conf), item.locale,
             retrievalType=retrieval_type,
@@ -73,8 +79,11 @@ def download_files(fapi, file_name, conf):
             try :
                 filter_cmd = filter_cmd.replace("{input_file}", work_file)
                 filter_cmd = filter_cmd.replace("{output_file}", tmp_file)
-                filter_cmd = filter_cmd.replace("{locale}", item.locale)
-                filter_cmd = filter_cmd.replace("{locale_underscore}", item.locale.replace("-", "_"))
+                filter_cmd = filter_cmd.replace("{locale}", locale)
+                filter_cmd = filter_cmd.replace("{locale_underscore}", locale_underscore)
+                filter_cmd = filter_cmd.replace("{locale_android_res}", locale_android_res)
+                filter_cmd = filter_cmd.replace("{language}", language)
+                filter_cmd = filter_cmd.replace("{region}", region)
                 print(" running filter: %s " % filter_cmd)
                 if os.system(filter_cmd) != 0:
                     raise SmarterlingError("Non 0 exit code from filter: %s" % filter_cmd)
@@ -85,16 +94,22 @@ def download_files(fapi, file_name, conf):
         if conf.has_key('save-cmd'):
             save_command = conf.get('save-cmd')
             save_command = save_command.replace("{input_file}", work_file)
-            save_command = save_command.replace("{locale}", item.locale)
-            save_command = save_command.replace("{locale_underscore}", item.locale.replace("-", "_"))
+            save_command = save_command.replace("{locale}", locale)
+            save_command = save_command.replace("{locale_underscore}", locale_underscore)
+            save_command = save_command.replace("{locale_android_res}", locale_android_res)
+            save_command = save_command.replace("{language}", language)
+            save_command = save_command.replace("{region}", region)
             print(" running save command: %s " % save_command)
             if os.system(save_command) != 0:
                 raise SmarterlingError("Non 0 exit code from save command: %s" % save_command)
 
         elif conf.has_key('save-pattern'):
             save_file = conf.get('save-pattern')
-            save_file = save_file.replace("{locale}", item.locale)
-            save_file = save_file.replace("{locale_underscore}", item.locale.replace("-", "_"))
+            save_file = save_file.replace("{locale}", locale)
+            save_file = save_file.replace("{locale_underscore}", locale_underscore)
+            save_file = save_file.replace("{locale_android_res}", locale_android_res)
+            save_file = save_file.replace("{language}", language)
+            save_file = save_file.replace("{region}", region)
             save_dir = os.path.dirname(save_file)
             if not os.path.exists(save_dir):
                 os.makedirs(save_dir)
