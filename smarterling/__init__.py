@@ -61,7 +61,7 @@ def download_files(fapi, file_name, conf):
             retrievalType=retrieval_type,
             includeOriginalStrings=include_original_strings)
         file_response = str(file_response).strip()
-        
+
         if code != 200 or len(file_response)==0:
             print("%s translation not found for %s" % (item.locale, file_name))
             continue
@@ -149,8 +149,10 @@ def upload_file(fapi, file_name, conf):
 def create_file_api(conf):
     """ Creates a SmartlingFileApi from the given config
     """
-    if not conf.config.get('api-key') \
-            or not conf.config.get('project-id'):
+    api_key = conf.config.get('api-key', os.environ.get('SMARTLING_API_KEY'))
+    project_id = conf.config.get('project-id', os.environ.get('SMARTLING_PROJECT_ID'))
+
+    if not project_id or not api_key:
         raise SmarterlingError('config.api-key and config.project-id are required configuration items')
     proxy_settings=None
     if conf.config.has_key('proxy-settings'):
@@ -161,9 +163,9 @@ def create_file_api(conf):
             int(conf.config.get('proxy-settings').get('port', '80')))
     return SmartlingFileApiFactory().getSmartlingTranslationApi(
         not conf.config.get('sandbox', False),
-        conf.config.get('api-key', ''),
-        conf.config.get('project-id', ''),
-        proxySettings=proxy_settings) 
+        api_key,
+        project_id,
+        proxySettings=proxy_settings)
 
 def parse_config(file_name='smarterling.config'):
     """ Parses a smarterling configuration file

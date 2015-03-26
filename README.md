@@ -33,7 +33,7 @@ optional arguments:
 - Smarterling always uploads before downloading
 
 ## configuration
-Smartling uses yaml for configuration.  Here's a sample that uses all of the options:
+Smartling uses yaml for configuration. You may also set `api-key` and `project-id` through the environment variables `SMARTLING_API_KEY` and `SMARTLING_PROJECT_ID`. Here's a sample that uses all of the options:
 
 ```yaml
 
