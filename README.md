@@ -24,11 +24,16 @@ optional arguments:
                         Configuration file
   -u, --upload          Upload files
   -d, --download        Download files
+  -x, --use-cache       Whether or not to use cache
+  -a CACHE_DIR, --cache-dir CACHE_DIR
+                        Cache directory for downloaded files
 ```
 
 - The `-c` argument defines a configuration file to use, this value defaults to `smarterling.config`
 - The `-u` argument tells smarterling to upload files
 - The `-d` argument tells smarterling to download files
+- The `-x` argument tells smarterling to use cache for translations, avoiding contacting smarterling for them.  This must be used in conjunction with the `-a` argument
+- The `-a` argument tells smarterling where to cache translations.  This can be used with or without the `-x` argument.  When used without the `-x` argument smarterling will always download the translations, but still write them to cache.  When used with the `-x` argument smarterling will enver download the translations, it will only use them from the cache.
 - If neither upload or download is specified smarterling will both upload and download
 - Smarterling always uploads before downloading
 

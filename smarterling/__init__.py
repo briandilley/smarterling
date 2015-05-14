@@ -1,4 +1,6 @@
 
+import json
+import hashlib
 import os
 import shutil
 from smartlingApiSdk.UploadData import UploadData
@@ -30,12 +32,71 @@ class AttributeDict(dict):
             return AttributeDict(val)
         return val
 
+def sha1(s):
+    """ Returns a sha1 of the given string
+    """
+    h = hashlib.new('sha1')
+    h.update(s)
+    return h.hexdigest()
+
+def write_to_file(file_name, data):
+    """ Writes data to file_name
+    """
+    with open(file_name, 'w') as f:
+        f.write(data)
+
+def read_from_file(file_name):
+    """ Reads from a file
+    """
+    with open(file_name, 'r') as f:
+        return f.read()
+
 def file_uri(file_name, conf):
     """ Return the file's uri
     """
     return conf.get('uri') if conf.has_key('uri') else file_name
 
-def download_files(fapi, file_name, conf):
+def get_translated_items(fapi, file_uri, use_cache, cache_dir=None):
+    """ Returns the last modified from smarterling
+    """
+    items = None
+    cache_file = os.path.join(cache_dir, sha1(file_uri)) if use_cache else None
+    if use_cache and os.path.exists(cache_file):
+        print("Using cache file %s for translated items for: %s" % (cache_file, file_uri))
+        items = json.loads(read_from_file(cache_file))
+    if not items:
+        print("Downloading %s from smartling" % file_uri)
+        (response, code) = fapi.last_modified(file_uri)
+        items = response.data.items
+        if cache_file:
+            print("Caching %s to %s" % (file_uri, cache_file))
+            write_to_file(cache_file, json.dumps(items))
+    return items
+
+def get_translated_file(fapi, file_uri, locale, retrieval_type, include_original_strings, use_cache, cache_dir=None):
+    """ Returns a translated file from smartling
+    """
+    file_data = None
+    cache_name = str(file_uri)+"."+str(locale)+"."+str(retrieval_type)+"."+str(include_original_strings)
+    cache_file = os.path.join(cache_dir, sha1(cache_name)) if cache_dir else None
+
+    if use_cache and os.path.exists(cache_file):
+        print("Using cache file %s for %s translation file: %s" % (cache_file, locale, file_uri))
+        file_data = read_from_file(cache_file)
+    elif not use_cache:
+        (file_data, code) = fapi.get(file_uri, locale,
+            retrievalType=retrieval_type,
+            includeOriginalStrings=include_original_strings)
+        file_data = str(file_data).strip()
+        if cache_file and code == 200 and len(file_data)>0:
+            print("Chaching to %s for %s translation file: %s" % (cache_file, locale, file_uri))
+            write_to_file(cache_file, file_data)
+    if not file_data or len(file_data)==0:
+        print("%s translation not found for %s" % (locale, file_uri))
+        return None
+    return file_data
+
+def download_files(fapi, file_name, conf, use_cache, cache_dir=None):
     """ Downloads translated versions of the files
     """
     retrieval_type              = conf.get('retrieval-type', 'published')
@@ -45,10 +106,14 @@ def download_files(fapi, file_name, conf):
     if not save_pattern:
         raise SmarterlingError("File %s doesn't have a save-pattern" % file_name)
 
-    print("Downloading %s from smartling" % file_name)
-    (response, code) = fapi.last_modified(file_uri(file_name, conf))
+    if cache_dir and not os.path.exists(cache_dir):
+        print("Creating cache dir: %s" % (cache_dir, ))
+        os.makedirs(cache_dir)
 
-    for item in response.data.items:
+    uri = file_uri(file_name, conf)
+    translated_items = get_translated_items(fapi, uri, use_cache, cache_dir=cache_dir)
+
+    for item in translated_items:
         item                = AttributeDict(item)
         locale              = item.locale
         locale_underscore   = locale.replace("-", "_")
@@ -57,12 +122,11 @@ def download_files(fapi, file_name, conf):
         language            = locale_parts[0]
         region              = locale_parts[1] if len(locale_parts)>1 else ""
 
-        (file_response, code) = fapi.get(file_uri(file_name, conf), item.locale,
-            retrievalType=retrieval_type,
-            includeOriginalStrings=include_original_strings)
-        file_response = str(file_response).strip()
+        file_response = get_translated_file(
+            fapi, file_uri(file_name, conf), locale, retrieval_type,
+            include_original_strings, use_cache, cache_dir=cache_dir)
 
-        if code != 200 or len(file_response)==0:
+        if not file_response:
             print("%s translation not found for %s" % (item.locale, file_name))
             continue
         print("Processing %s translation for %s" % (item.locale, file_name))
@@ -173,9 +237,7 @@ def parse_config(file_name='smarterling.config'):
     if not os.path.exists(file_name) or not os.path.isfile(file_name):
         raise SmarterlingError('Config file not found: %s' % file_name)
     try:
-        contents = None
-        with open(file_name, 'r') as f:
-            contents = f.read()
+        contents = read_from_file(file_name)
         contents_with_environment_variables_expanded = os.path.expandvars(contents)
         return AttributeDict(yaml.load(contents_with_environment_variables_expanded))
     except Exception as e:
