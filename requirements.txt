@@ -1,6 +1,6 @@
 # Deployed dependencies
-SmartlingApiSdk     >= 1.2.5
-pyyaml              >= 3.10
+SmartlingApiSdk     == 1.2.5
+pyyaml              == 3.10
 
 # Development dependencies:
 Nose == 1.1.2

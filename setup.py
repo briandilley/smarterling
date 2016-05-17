@@ -4,7 +4,7 @@ setup(
 
     # general meta
     name='smarterling',
-    version='0.5',
+    version='0.6',
     author='Brian C. Dilley - Flipagram',
     author_email='brian@flipagram.com',
     description='Python based command line tool for performing automated tasks with Smartling (http://www.smartling.com).',
@@ -19,8 +19,8 @@ setup(
 
     # dependencies
     install_requires=[
-        'SmartlingApiSdk>=1.2.5',
-        'pyyaml>=3.10'
+        'SmartlingApiSdk==1.2.5',
+        'pyyaml==3.10'
     ],
     # additional files to include
     include_package_data=True,
